@@ -1,10 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Path
 from pydantic import BaseModel, IPvAnyAddress, ValidationError
-from typing import Union
+from typing import Union, List
 
 from network_mapper.nmap_core import scan_for_port_services, scan_ip_for_open_ports  # Assuming this function is defined in network_mapper.py
 
-app = FastAPI(title="Agentic Network Mapper", version="0.1.0")
+app = FastAPI()
 
 class NetworkScan(BaseModel):
     network_id: IPvAnyAddress
@@ -43,17 +43,22 @@ async def scan_network(network_id: str):
         return {"error": "Invalid IP address format"}
     
 @app.get("/scan/{network_id}/portlist/{port_range}")
-async def scan_ports(network_id: str, port_range: Union[list[int], None] = None):
-    print(f"LOG: Initiating port scan for network ID: {network_id} with port range: {port_range}")
-    """
-    Scan the specified network ID for open ports within the given port range.
-    """
-    if verify_ip_address(network_id):
-        print("LOG: Starting port scan...")
-        print(f"Scanning ports on network with ID: {network_id} in range: {port_range}")
-        # Simulate port scan logic here
-        result = scan_for_port_services(network_id, port_range)
-        return {"Target": network_id, "Port Range": port_range, "Result": result}
-    else:
-        print("LOG: Port scan failed due to invalid IP address format.")
-        return {"error": "Invalid IP address format"}
+async def scan_ports(
+    network_id: str,
+    port_range: str = Path(..., description="Comma-separated list of ports, e.g. '80,443,8080'")
+):
+    try:
+        # Convert port_range string to list of integers
+        ports = [int(p) for p in port_range.split(',') if p.strip()]
+        
+        print(f"LOG: Initiating port scan for network ID: {network_id} with port range: {ports}")
+        
+        if verify_ip_address(network_id):
+            print("LOG: Starting port scan...")
+            result = scan_for_port_services(network_id, ports)
+            return {"Target": network_id, "Port Range": ports, "Result": result}
+        else:
+            print("LOG: Port scan failed due to invalid IP address format.")
+            return {"error": "Invalid IP address format"}
+    except ValueError:
+        return {"error": "Invalid port range format. Use comma-separated numbers, e.g. '80,443,8080'"}

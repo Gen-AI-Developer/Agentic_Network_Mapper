@@ -11,7 +11,8 @@ def scan_ip_for_open_ports(ip_address: str, port_range: str = '1-1024') -> list:
     nm = nmap.PortScanner()
     try:
         print(f"LOG: Scanning {ip_address} for open ports in range {port_range}")
-        nm.scan(ip_address, port_range, arguments='-sT')  # -sS: TCP SYN scan
+        # Changed from -sS to -sT for non-root TCP connect scan
+        nm.scan(ip_address, port_range, arguments='-sT')
 
         open_ports = []
         if ip_address in nm.all_hosts():
@@ -41,7 +42,8 @@ def scan_for_port_services(ip_address: str, ports: list[int]) -> dict:
         port_str = ','.join(str(p) for p in ports)
         print(f"LOG: Scanning IP address {ip_address} for ports: {port_str}")
         
-        nm.scan(ip_address, port_str, arguments='-sS')  # Use -sT for non-root
+        # Changed from -sS to -sT for non-root TCP connect scan
+        nm.scan(ip_address, port_str, arguments='-sT -v')
 
         services = {}
         if ip_address in nm.all_hosts():
