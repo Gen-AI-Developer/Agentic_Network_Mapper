@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel, IPvAnyAddress, ValidationError
 from typing import Union
 
-from network_mapper.nmap_core import scan_ip_for_open_ports, scan_for_port_servies
+from network_mapper.nmap_core import scan_ip_for_open_ports  # Assuming this function is defined in network_mapper.py
 
 app = FastAPI(title="Agentic Network Mapper", version="0.1.0")
 
@@ -40,4 +40,20 @@ async def scan_network(network_id: str):
         return {"Target": network_id, "Result": result}
     else:
         print("LOG: Scan failed due to invalid IP address format.")
+        return {"error": "Invalid IP address format"}
+    
+@app.get("/scan/{network_id}/ports")
+async def scan_ports(network_id: str, port_range: Union[str, None] = None):
+    print(f"LOG: Initiating port scan for network ID: {network_id} with port range: {port_range}")
+    """
+    Scan the specified network ID for open ports within the given port range.
+    """
+    if verify_ip_address(network_id):
+        print("LOG: Starting port scan...")
+        print(f"Scanning ports on network with ID: {network_id} in range: {port_range}")
+        # Simulate port scan logic here
+        result = scan_ip_for_open_ports(network_id, port_range)
+        return {"Target": network_id, "Port Range": port_range, "Result": result}
+    else:
+        print("LOG: Port scan failed due to invalid IP address format.")
         return {"error": "Invalid IP address format"}
